@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-electron/
+output/
+release/
+release-build/
+.tmp/
+npm-debug.log*
