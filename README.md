@@ -1,0 +1,2 @@
+# coinchain
+Simple coin game
