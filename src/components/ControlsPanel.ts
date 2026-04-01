@@ -15,6 +15,7 @@ export function createControlsPanel(store: AppStore): HTMLElement {
   const resetButton = document.createElement("button");
   resetButton.type = "button";
   resetButton.className = "control-button";
+  resetButton.dataset.action = "reset-run";
   resetButton.textContent = "Reset";
   resetButton.addEventListener("click", () => {
     store.reset();
@@ -24,8 +25,10 @@ export function createControlsPanel(store: AppStore): HTMLElement {
 
   const skipDayButton = document.createElement("button");
   skipDayButton.type = "button";
-  skipDayButton.className = "control-button control-button--primary";
+  skipDayButton.className = "control-button control-button--primary control-button--day-end";
+  skipDayButton.dataset.action = "skip-day";
   skipDayButton.textContent = "Skip Day";
+  skipDayButton.title = "End the current day immediately.";
   skipDayButton.addEventListener("click", () => {
     store.skipDay();
   });

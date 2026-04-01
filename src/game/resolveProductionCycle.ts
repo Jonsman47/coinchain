@@ -89,6 +89,11 @@ interface RoutePacket {
   visitedCellIds: string[];
 }
 
+interface MineSupportState {
+  additiveBoost: number;
+  focusedMultiplier: number;
+}
+
 const supportableMineTiles = new Set<TileId>(["miner", "rich_miner"]);
 const directionalArrow: Record<Exclude<OutputDirection, "none">, string> = {
   down: "v",
@@ -214,7 +219,7 @@ export function resolveProductionCycle(
     .filter((cell) => placedTiles[cell.id] === "cleaner")
     .map((cell) => cell.id);
 
-  const mineMultipliers = new Map<string, number>();
+  const mineSupportStates = new Map<string, MineSupportState>();
 
   boardCells.forEach((cell) => {
     const tileId = placedTiles[cell.id];
@@ -223,7 +228,10 @@ export function resolveProductionCycle(
       return;
     }
 
-    mineMultipliers.set(cell.id, 1);
+    mineSupportStates.set(cell.id, {
+      additiveBoost: 0,
+      focusedMultiplier: 1
+    });
   });
 
   boardCells.forEach((cell) => {
@@ -249,10 +257,13 @@ export function resolveProductionCycle(
     activeSupportCellIds.add(cell.id);
 
     targetIds.forEach((targetId) => {
-      mineMultipliers.set(
-        targetId,
-        (mineMultipliers.get(targetId) ?? 1) * config.multiplier
-      );
+      const supportState = mineSupportStates.get(targetId);
+
+      if (!supportState) {
+        return;
+      }
+
+      supportState.additiveBoost += config.bonusPercent;
     });
   });
 
@@ -281,9 +292,15 @@ export function resolveProductionCycle(
     activeSupportCellIds.add(cell.id);
 
     targetIds.forEach((targetId) => {
-      mineMultipliers.set(
-        targetId,
-        (mineMultipliers.get(targetId) ?? 1) * config.multiplier
+      const supportState = mineSupportStates.get(targetId);
+
+      if (!supportState) {
+        return;
+      }
+
+      supportState.focusedMultiplier = Math.max(
+        supportState.focusedMultiplier,
+        config.multiplier
       );
     });
   });
@@ -299,8 +316,14 @@ export function resolveProductionCycle(
 
     if (tileId === "miner" || tileId === "rich_miner") {
       const baseOutput = getTileOutput(tileId, tileTier);
-      const multiplier = mineMultipliers.get(cell.id) ?? 1;
-      baseOutputs.set(cell.id, roundOutput(baseOutput * multiplier));
+      const supportState = mineSupportStates.get(cell.id);
+      // Keep support stacking readable and stable:
+      // booster percentages add together, then only the single strongest
+      // focused support (Doubler/Tripler) applies to that mine.
+      const totalMultiplier =
+        (supportState ? 1 + supportState.additiveBoost : 1) *
+        (supportState?.focusedMultiplier ?? 1);
+      baseOutputs.set(cell.id, roundOutput(baseOutput * totalMultiplier));
       return;
     }
 

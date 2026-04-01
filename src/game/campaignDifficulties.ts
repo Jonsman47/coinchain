@@ -26,7 +26,7 @@ const campaignDifficultyDefinitions: Record<
 > = {
   easy: {
     description:
-      "Relaxed mode. Current Coin Chain balance. Keep your money between days and learn the systems.",
+      "Relaxed mode. Forgiving quotas, clear forecasts, and full cash carryover.",
     expansionCostMultiplier: 1,
     id: "easy",
     keepMoneyBetweenDays: true,
@@ -37,7 +37,7 @@ const campaignDifficultyDefinitions: Record<
   },
   normal: {
     description:
-      "A small step up from Easy. Slightly higher day goals, but still forgiving.",
+      "Fair carryover mode. You still get forecasts, but the day goals ask for cleaner planning.",
     expansionCostMultiplier: 1,
     id: "normal",
     keepMoneyBetweenDays: true,
@@ -48,58 +48,58 @@ const campaignDifficultyDefinitions: Record<
   },
   medium: {
     description:
-      "Higher quotas and slightly pricier growth. You need a better build, not just more tiles.",
-    expansionCostMultiplier: 1.1,
+      "Forecasts are gone and the board needs to be efficient. Good play should clear it.",
+    expansionCostMultiplier: 1.08,
     id: "medium",
     keepMoneyBetweenDays: true,
     name: "Medium",
     showPrediction: false,
-    tileCostMultiplier: 1.1,
+    tileCostMultiplier: 1.08,
     upgradeCostMultiplier: 1.1
   },
   hard: {
     description:
-      "Aggressive quotas that ramp every day. Mistakes are costly, but money still carries over.",
-    expansionCostMultiplier: 1.25,
+      "Strong quotas, pricier growth, and very little slack. Strong optimization should feel rewarding.",
+    expansionCostMultiplier: 1.16,
     id: "hard",
     keepMoneyBetweenDays: true,
     name: "Hard",
     showPrediction: false,
-    tileCostMultiplier: 1.25,
-    upgradeCostMultiplier: 1.3
+    tileCostMultiplier: 1.16,
+    upgradeCostMultiplier: 1.22
   },
   insane: {
     description:
-      "Brutal scaling and expensive growth. Strong planning and tile synergy are required.",
-    expansionCostMultiplier: 1.4,
+      "Punishing quotas and harsher prices. You need a tight board and almost no wasted spend.",
+    expansionCostMultiplier: 1.28,
     id: "insane",
     keepMoneyBetweenDays: true,
     name: "Insane",
     showPrediction: false,
-    tileCostMultiplier: 1.45,
-    upgradeCostMultiplier: 1.5
+    tileCostMultiplier: 1.28,
+    upgradeCostMultiplier: 1.35
   },
   extreme: {
     description:
-      "Every day is a fresh cash sprint. Your board remains, but your money does not.",
-    expansionCostMultiplier: 1.6,
+      "A fresh cash sprint every day. Your board remains, but every quota must be met from reset money.",
+    expansionCostMultiplier: 1.4,
     id: "extreme",
     keepMoneyBetweenDays: false,
     name: "Extreme",
     showPrediction: false,
-    tileCostMultiplier: 1.7,
-    upgradeCostMultiplier: 1.8
+    tileCostMultiplier: 1.4,
+    upgradeCostMultiplier: 1.5
   },
   hardcore: {
     description:
-      "Near-perfect optimization only. Extremely punishing quotas, high prices, and no saved cash.",
-    expansionCostMultiplier: 1.85,
+      "Near-perfect optimization only. No saved cash, tighter growth, and brutal quotas from the start.",
+    expansionCostMultiplier: 1.55,
     id: "hardcore",
     keepMoneyBetweenDays: false,
     name: "Hardcore",
     showPrediction: false,
-    tileCostMultiplier: 2,
-    upgradeCostMultiplier: 2.2
+    tileCostMultiplier: 1.55,
+    upgradeCostMultiplier: 1.7
   }
 };
 
@@ -146,19 +146,19 @@ function getGoalMultiplier(
 
   switch (difficultyId) {
     case "easy":
-      return getCompoundingMultiplier(1, 1.6, 2.3, 1.13);
+      return getCompoundingMultiplier(2.3, 6.5, 16, 1.13);
     case "normal":
-      return getCompoundingMultiplier(1.35, 2.5, 4.2, 1.15);
+      return getCompoundingMultiplier(3, 8.2, 20.5, 1.14);
     case "medium":
-      return getCompoundingMultiplier(3, 7, 12.5, 1.17);
+      return getCompoundingMultiplier(4, 11, 27.5, 1.15);
     case "hard":
-      return getCompoundingMultiplier(10, 24, 42, 1.19);
+      return getCompoundingMultiplier(4.8, 14, 33.5, 1.16);
     case "insane":
-      return getCompoundingMultiplier(15, 38, 68, 1.205);
+      return getCompoundingMultiplier(5, 15.2, 34, 1.17);
     case "extreme":
-      return getCompoundingMultiplier(22, 58, 105, 1.22);
+      return getCompoundingMultiplier(4.4, 10.2, 18.1, 1.19);
     case "hardcore":
-      return getCompoundingMultiplier(30, 82, 150, 1.24);
+      return getCompoundingMultiplier(4.7, 10.7, 18.7, 1.21);
   }
 }
 

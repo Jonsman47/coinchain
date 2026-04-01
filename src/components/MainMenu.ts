@@ -57,6 +57,7 @@ export function createMainMenu(actions: MainMenuActions): {
   const continueButton = document.createElement("button");
   continueButton.type = "button";
   continueButton.className = "main-menu__button main-menu__button--primary";
+  continueButton.dataset.action = "continue-run";
   continueButton.textContent = "Continue";
   continueButton.addEventListener("click", () => {
     actions.onContinue();
@@ -65,6 +66,7 @@ export function createMainMenu(actions: MainMenuActions): {
   const campaignButton = document.createElement("button");
   campaignButton.type = "button";
   campaignButton.className = "main-menu__button";
+  campaignButton.dataset.action = "show-difficulties";
   campaignButton.textContent = "Normal";
   campaignButton.addEventListener("click", () => {
     showDifficultyView();
@@ -73,6 +75,7 @@ export function createMainMenu(actions: MainMenuActions): {
   const endlessButton = document.createElement("button");
   endlessButton.type = "button";
   endlessButton.className = "main-menu__button";
+  endlessButton.dataset.action = "start-endless";
   endlessButton.textContent = "Endless";
   endlessButton.addEventListener("click", () => {
     actions.onStartEndless();
@@ -88,6 +91,7 @@ export function createMainMenu(actions: MainMenuActions): {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "main-menu__difficulty";
+    button.dataset.difficulty = difficulty.id;
     button.addEventListener("click", () => {
       actions.onStartCampaign(difficulty.id);
     });
@@ -117,6 +121,7 @@ export function createMainMenu(actions: MainMenuActions): {
   const backToModesButton = document.createElement("button");
   backToModesButton.type = "button";
   backToModesButton.className = "main-menu__button";
+  backToModesButton.dataset.action = "back-to-modes";
   backToModesButton.textContent = "Back";
   backToModesButton.addEventListener("click", () => {
     showRootView();

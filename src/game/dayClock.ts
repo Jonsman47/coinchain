@@ -1,4 +1,4 @@
-export const DAY_DURATION_SECONDS = 10 * 60;
+export const DAY_DURATION_SECONDS = 12 * 60;
 export const DAY_TOTAL_HOURS = 12;
 const DAY_TOTAL_MINUTES = DAY_TOTAL_HOURS * 60;
 

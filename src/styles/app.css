@@ -1605,6 +1605,25 @@ button {
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+.control-button--day-end {
+  min-width: 96px;
+  background:
+    linear-gradient(180deg, rgba(255, 245, 216, 0.18), transparent 42%),
+    linear-gradient(180deg, #7a4d12 0%, #412108 100%);
+  border-color: rgba(255, 226, 168, 0.2);
+  color: #fff8ec;
+  box-shadow:
+    0 16px 28px rgba(83, 46, 8, 0.24),
+    inset 0 1px 0 rgba(255, 247, 223, 0.18);
+}
+
+.control-button--day-end:hover {
+  border-color: rgba(255, 232, 183, 0.3);
+  box-shadow:
+    0 18px 30px rgba(95, 54, 10, 0.28),
+    inset 0 1px 0 rgba(255, 247, 223, 0.22);
+}
+
 .controls-panel {
   display: grid;
   gap: 12px;

@@ -42,7 +42,7 @@ export const tileCatalog: TileDefinition[] = [
     description: getTileEffectText("booster", DEFAULT_TILE_TIER),
     id: "booster",
     name: "Booster",
-    tagline: "Soft support for mines."
+    tagline: "Booster bonuses add together on mines."
   },
   {
     accentClass: "tile-card--doubler",
@@ -51,7 +51,7 @@ export const tileCatalog: TileDefinition[] = [
     description: getTileEffectText("doubler", DEFAULT_TILE_TIER),
     id: "doubler",
     name: "Doubler",
-    tagline: "Targets one strong vein."
+    tagline: "Only the strongest focused multiplier applies."
   },
   {
     accentClass: "tile-card--tripler",
@@ -60,7 +60,7 @@ export const tileCatalog: TileDefinition[] = [
     description: getTileEffectText("tripler", DEFAULT_TILE_TIER),
     id: "tripler",
     name: "Tripler",
-    tagline: "High-cost core support."
+    tagline: "High-cost focused support. Strongest multiplier wins."
   },
   {
     accentClass: "tile-card--bank",

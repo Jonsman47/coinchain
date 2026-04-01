@@ -4,9 +4,9 @@ export const DEFAULT_TILE_TIER = 1;
 export const MAX_TILE_TIER = 10;
 
 export interface BoosterTierConfig {
+  bonusPercent: number;
   effectText: string;
   includeDiagonals: boolean;
-  multiplier: number;
   radius: number;
 }
 
@@ -87,8 +87,8 @@ function getTierIndex(tier: number): number {
   return clampTier(tier) - 1;
 }
 
-const minerOutputs = [2, 4, 10, 20, 45, 100, 220, 500, 1200, 3000] as const;
-const richMinerOutputs = [5, 12, 28, 60, 140, 320, 750, 1800, 4500, 12000] as const;
+const minerOutputs = [2, 3, 5, 8, 12, 18, 27, 40, 60, 90] as const;
+const richMinerOutputs = [5, 7, 10, 15, 22, 32, 46, 65, 92, 130] as const;
 const edgeOutputs = [8, 18, 40, 85, 180, 400, 900, 2100, 5000, 12000] as const;
 const cornerOutputs = [14, 30, 70, 150, 320, 700, 1600, 3800, 9000, 22000] as const;
 const riskOutputs = [24, 60, 140, 320, 750, 1800, 4500, 11000, 28000, 75000] as const;
@@ -108,98 +108,98 @@ const chainTierConfigs = [
 
 const boosterTierConfigs = [
   {
-    effectText: "Adjacent Miners and Rich Miners get +25% output",
+    bonusPercent: 0.15,
+    effectText: "+15% to adjacent Miner/Rich Miner output",
     includeDiagonals: false,
-    multiplier: 1.25,
     radius: 1
   },
   {
-    effectText: "Adjacent Miners and Rich Miners get +50% output",
+    bonusPercent: 0.25,
+    effectText: "+25% to adjacent Miner/Rich Miner output",
     includeDiagonals: false,
-    multiplier: 1.5,
     radius: 1
   },
   {
-    effectText: "Adjacent Miners and Rich Miners get +75% output",
+    bonusPercent: 0.4,
+    effectText: "+40% to adjacent Miner/Rich Miner output",
     includeDiagonals: false,
-    multiplier: 1.75,
     radius: 1
   },
   {
-    effectText: "Adjacent Miners and Rich Miners get +100% output",
+    bonusPercent: 0.6,
+    effectText: "+60% to adjacent Miner/Rich Miner output",
     includeDiagonals: false,
-    multiplier: 2,
     radius: 1
   },
   {
-    effectText: "Adjacent Miners and Rich Miners get x2 output",
+    bonusPercent: 0.85,
+    effectText: "+85% to adjacent Miner/Rich Miner output",
     includeDiagonals: false,
-    multiplier: 2,
     radius: 1
   },
   {
-    effectText: "Adjacent Miners and Rich Miners get x2.5 output",
+    bonusPercent: 1.15,
+    effectText: "+115% to adjacent Miner/Rich Miner output",
     includeDiagonals: false,
-    multiplier: 2.5,
     radius: 1
   },
   {
-    effectText: "Gives x3 output and reaches diagonal neighbors too",
+    bonusPercent: 1.5,
+    effectText: "+150% and diagonal neighbors too",
     includeDiagonals: true,
-    multiplier: 3,
     radius: 1
   },
   {
-    effectText: "Gives x4 output and affects tiles within radius 2",
+    bonusPercent: 1.9,
+    effectText: "+190% within radius 2",
     includeDiagonals: true,
-    multiplier: 4,
     radius: 2
   },
   {
-    effectText: "Gives x5.5 output and affects tiles within radius 2",
+    bonusPercent: 2.4,
+    effectText: "+240% within radius 2",
     includeDiagonals: true,
-    multiplier: 5.5,
     radius: 2
   },
   {
-    effectText: "Gives x8 output and affects tiles within radius 2",
+    bonusPercent: 3,
+    effectText: "+300% within radius 2",
     includeDiagonals: true,
-    multiplier: 8,
     radius: 2
   }
 ] as const satisfies readonly BoosterTierConfig[];
 
 const doublerTierConfigs = [
-  { effectText: "x2 to 1 adjacent Miner or Rich Miner", maxTargets: 1, multiplier: 2 },
+  { effectText: "x2 to 1 adjacent valid tile", maxTargets: 1, multiplier: 2 },
   { effectText: "x2 to up to 2 adjacent valid tiles", maxTargets: 2, multiplier: 2 },
-  { effectText: "x3 to 1 adjacent valid tile", maxTargets: 1, multiplier: 3 },
-  { effectText: "x3 to up to 2 adjacent valid tiles", maxTargets: 2, multiplier: 3 },
-  { effectText: "x4 to 2 adjacent valid tiles", maxTargets: 2, multiplier: 4 },
-  { effectText: "x5 to 2 adjacent valid tiles", maxTargets: 2, multiplier: 5 },
-  { effectText: "x6 to 3 adjacent valid tiles", maxTargets: 3, multiplier: 6 },
-  { effectText: "x8 to 3 adjacent valid tiles", maxTargets: 3, multiplier: 8 },
-  { effectText: "x10 to 4 adjacent valid tiles", maxTargets: 4, multiplier: 10 },
-  { effectText: "x15 to 4 adjacent valid tiles", maxTargets: 4, multiplier: 15 }
+  { effectText: "x2.25 to 1 adjacent valid tile", maxTargets: 1, multiplier: 2.25 },
+  { effectText: "x2.25 to up to 2 adjacent valid tiles", maxTargets: 2, multiplier: 2.25 },
+  { effectText: "x2.5 to up to 2 adjacent valid tiles", maxTargets: 2, multiplier: 2.5 },
+  { effectText: "x2.75 to up to 2 adjacent valid tiles", maxTargets: 2, multiplier: 2.75 },
+  { effectText: "x3 to up to 3 adjacent valid tiles", maxTargets: 3, multiplier: 3 },
+  { effectText: "x3.5 to up to 3 adjacent valid tiles", maxTargets: 3, multiplier: 3.5 },
+  { effectText: "x4 to up to 4 adjacent valid tiles", maxTargets: 4, multiplier: 4 },
+  { effectText: "x5 to up to 4 adjacent valid tiles", maxTargets: 4, multiplier: 5 }
 ] as const satisfies readonly SupportTierConfig[];
 
 const triplerTierConfigs = [
-  { effectText: "x3 to 1 adjacent Miner or Rich Miner", maxTargets: 1, multiplier: 3 },
-  { effectText: "x3 to 2 adjacent valid tiles", maxTargets: 2, multiplier: 3 },
-  { effectText: "x4 to 2 adjacent valid tiles", maxTargets: 2, multiplier: 4 },
-  { effectText: "x5 to 2 adjacent valid tiles", maxTargets: 2, multiplier: 5 },
-  { effectText: "x6 to 3 adjacent valid tiles", maxTargets: 3, multiplier: 6 },
-  { effectText: "x8 to 3 adjacent valid tiles", maxTargets: 3, multiplier: 8 },
-  { effectText: "x10 to 4 adjacent valid tiles", maxTargets: 4, multiplier: 10 },
-  { effectText: "x13 to 4 adjacent valid tiles", maxTargets: 4, multiplier: 13 },
+  { effectText: "x3 to 1 adjacent valid tile", maxTargets: 1, multiplier: 3 },
+  { effectText: "x3 to up to 2 adjacent valid tiles", maxTargets: 2, multiplier: 3 },
+  { effectText: "x3.25 to up to 2 adjacent valid tiles", maxTargets: 2, multiplier: 3.25 },
+  { effectText: "x3.5 to up to 2 adjacent valid tiles", maxTargets: 2, multiplier: 3.5 },
+  { effectText: "x4 to up to 3 adjacent valid tiles", maxTargets: 3, multiplier: 4 },
+  { effectText: "x4.5 to up to 3 adjacent valid tiles", maxTargets: 3, multiplier: 4.5 },
+  { effectText: "x5 to up to 4 adjacent valid tiles", maxTargets: 4, multiplier: 5 },
+  { effectText: "x6 to up to 4 adjacent valid tiles", maxTargets: 4, multiplier: 6 },
   {
-    effectText: "x17 to all orthogonally adjacent valid tiles",
+    effectText: "x7.5 to all orthogonally adjacent valid tiles",
     maxTargets: 4,
-    multiplier: 17
+    multiplier: 7.5
   },
   {
-    effectText: "x25 to all orthogonally adjacent valid tiles",
+    effectText: "x9 to all orthogonally adjacent valid tiles",
     maxTargets: 4,
-    multiplier: 25
+    multiplier: 9
   }
 ] as const satisfies readonly SupportTierConfig[];
 

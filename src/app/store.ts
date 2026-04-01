@@ -488,17 +488,13 @@ function getUpgradeCostMultiplier(snapshot: AppSnapshot): number {
   return getCampaignDifficultyState(snapshot).upgradeCostMultiplier;
 }
 
-function canSkipDay(snapshot: AppSnapshot, completedCycles = getCompletedCycles(snapshot)): boolean {
-  return (
-    snapshot.mode === "campaign" &&
-    snapshot.levelRunState === "playing" &&
-    getRemainingDaySeconds(completedCycles) <= 10
-  );
+function canSkipDay(snapshot: AppSnapshot): boolean {
+  return snapshot.mode === "campaign" && snapshot.levelRunState === "playing";
 }
 
 function buildWinMessage(snapshot: AppSnapshot): string {
   if (snapshot.levelRunState === "set_complete") {
-    return "Day 25 clear / Normal mode finished.";
+    return `Day 25 clear / ${snapshot.campaignDifficultyName ?? "Campaign"} finished.`;
   }
 
   return `Day ${snapshot.currentLevelIndex + 1} clear / Loading day ${snapshot.currentLevelIndex + 2}...`;
@@ -838,7 +834,7 @@ function withDerivedLevelState(snapshot: AppSnapshot): AppSnapshot {
     projectedIncome,
     selectedTileId,
     showGoalPrediction: difficultyState?.showPrediction ?? false,
-    skipDayAvailable: canSkipDay(snapshot, completedCycles),
+    skipDayAvailable: canSkipDay(snapshot),
     tilePrices
   };
 }
@@ -1783,7 +1779,7 @@ export function createAppStore(): AppStore {
         withDerivedLevelState({
           ...snapshot,
           lastResolvedCycle: DAY_DURATION_SECONDS,
-          statusMessage: `Day ${snapshot.currentLevelIndex + 1} skipped at the buzzer.`
+          statusMessage: `Day ${snapshot.currentLevelIndex + 1} ended early.`
         })
       );
       emit();

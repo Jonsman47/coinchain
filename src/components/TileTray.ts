@@ -42,6 +42,7 @@ export function createTileTray(store: AppStore): HTMLElement {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "shop-item";
+    button.dataset.tileId = tile.id;
     button.addEventListener("click", () => {
       store.selectTile(tile.id);
     });

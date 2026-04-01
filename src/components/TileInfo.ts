@@ -272,8 +272,10 @@ export function createTileInfo(store: AppStore): HTMLElement {
         hint.textContent = "Routes incoming value onward, or cashes out if set to Direct.";
       } else if (tileId === "anchor") {
         hint.textContent = "Routed value sent here becomes money right away.";
-      } else if (tileId === "booster" || tileId === "doubler" || tileId === "tripler") {
-        hint.textContent = tile.tagline;
+      } else if (tileId === "booster") {
+        hint.textContent = "Boosters add their % bonuses together on nearby mines.";
+      } else if (tileId === "doubler" || tileId === "tripler") {
+        hint.textContent = "Only the single strongest Doubler or Tripler applies to each mine.";
       } else if (tileId === "edge") {
         hint.textContent = "Only shines on the outer edge.";
       } else if (tileId === "corner") {
