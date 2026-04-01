@@ -1,3 +1,4 @@
+import type { AppSettingsBridge } from "../app/settings";
 import type { AppStore } from "../app/store";
 import { getCampaignDifficulty } from "../game/campaignDifficulties";
 import { formatCoins, formatCompactNumber } from "../game/formatting";
@@ -36,9 +37,13 @@ function getDirectionLabel(direction: OutputDirection): string {
   }
 }
 
-export function createTileInfo(store: AppStore): HTMLElement {
+export function createTileInfo(
+  store: AppStore,
+  settingsBridge: AppSettingsBridge
+): HTMLElement {
   const section = document.createElement("section");
   section.className = "side-card tile-info";
+  let runtimeSettings = settingsBridge.get();
 
   const title = document.createElement("span");
   title.className = "side-card__label";
@@ -146,6 +151,10 @@ export function createTileInfo(store: AppStore): HTMLElement {
   properties.append(propertiesLabel, directionRow, releaseRow);
   section.append(title, preview, name, meta, hint, upgradeSection, properties);
 
+  settingsBridge.subscribe((nextSettings) => {
+    runtimeSettings = nextSettings;
+  });
+
   store.subscribe(
     ({
       campaignDifficultyId,
@@ -166,7 +175,10 @@ export function createTileInfo(store: AppStore): HTMLElement {
       decayValues
     }) => {
       const inspectedTileId = inspectedCellId ? placedTiles[inspectedCellId] ?? null : null;
-      const tileId = inspectedTileId ?? selectedTileId ?? hoveredTileId;
+      const tileId =
+        inspectedTileId ??
+        selectedTileId ??
+        (runtimeSettings.showTileDescriptionsOnHover ? hoveredTileId : null);
       const isInspectingFocusedTile = inspectedTileId !== null && tileId === inspectedTileId;
       const isShowingSelectedShopTile =
         !isInspectingFocusedTile && selectedTileId !== null && tileId === selectedTileId;
@@ -228,19 +240,25 @@ export function createTileInfo(store: AppStore): HTMLElement {
 
       if (isInspectingFocusedTile && inspectedCellId) {
         const paidPrice = placedTileCosts[inspectedCellId] ?? tilePrices[tileId];
-        meta.textContent = `Paid ${formatCoins(paidPrice)} / Sell ${formatCoins(Math.floor(paidPrice / 2))}`;
+        meta.textContent = runtimeSettings.showAdvancedTileStats
+          ? `Paid ${formatCoins(paidPrice)} / Sell ${formatCoins(Math.floor(paidPrice / 2))}`
+          : `${tile.description}`;
       } else if (!tileUnlocked) {
         meta.textContent = `Locked / Day ${unlockDay} / ${formatCoins(tilePrices[tileId])} / ${tile.description}`;
       } else {
-        meta.textContent = `${formatCoins(tilePrices[tileId])} / ${tile.description}`;
+        meta.textContent = runtimeSettings.showAdvancedTileStats
+          ? `${formatCoins(tilePrices[tileId])} / ${tile.description}`
+          : tile.description;
       }
 
       upgradeSection.hidden = false;
       currentTierLine.textContent = `Tier ${tileTier}`;
       currentEffectLine.textContent = `Now: ${currentEffectText}`;
+      currentEffectLine.hidden = !runtimeSettings.showAdvancedTileStats;
 
       if (nextEffectText && nextUpgradeCost !== null) {
         nextEffectLine.textContent = `Next: ${nextEffectText}`;
+        nextEffectLine.hidden = !runtimeSettings.showAdvancedTileStats;
         upgradeButton.hidden = false;
 
         if (isInspectingFocusedTile) {
@@ -254,6 +272,7 @@ export function createTileInfo(store: AppStore): HTMLElement {
         }
       } else {
         nextEffectLine.textContent = "Next: Max tier reached.";
+        nextEffectLine.hidden = !runtimeSettings.showAdvancedTileStats;
         upgradeButton.textContent = "Max Tier";
         upgradeButton.disabled = true;
         upgradeButton.hidden = false;

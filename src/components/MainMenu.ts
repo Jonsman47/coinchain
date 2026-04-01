@@ -2,13 +2,15 @@ import { campaignDifficulties, type CampaignDifficultyId } from "../game/campaig
 
 export interface MainMenuActions {
   onContinue: () => void;
+  onLoadGame: () => void;
+  onOpenSettings: () => void;
   onStartCampaign: (difficulty: CampaignDifficultyId) => void;
   onStartEndless: () => void;
 }
 
 export function createMainMenu(actions: MainMenuActions): {
   element: HTMLElement;
-  setSavedRunAvailable: (available: boolean) => void;
+  setSavedRunAvailable: (available: boolean, continueLabel?: string) => void;
   showRootView: () => void;
 } {
   const menu = document.createElement("section");
@@ -81,11 +83,29 @@ export function createMainMenu(actions: MainMenuActions): {
     actions.onStartEndless();
   });
 
+  const loadButton = document.createElement("button");
+  loadButton.type = "button";
+  loadButton.className = "main-menu__button";
+  loadButton.dataset.action = "load-run";
+  loadButton.textContent = "Load Game";
+  loadButton.addEventListener("click", () => {
+    actions.onLoadGame();
+  });
+
+  const settingsButton = document.createElement("button");
+  settingsButton.type = "button";
+  settingsButton.className = "main-menu__button";
+  settingsButton.dataset.action = "open-settings";
+  settingsButton.textContent = "Settings";
+  settingsButton.addEventListener("click", () => {
+    actions.onOpenSettings();
+  });
+
   const note = document.createElement("p");
   note.className = "main-menu__note";
-  note.textContent = "Backing out saves your current run here.";
+  note.textContent = "Runs live in five local save slots.";
 
-  rootActions.append(continueButton, campaignButton, endlessButton);
+  rootActions.append(continueButton, campaignButton, endlessButton, loadButton, settingsButton);
 
   campaignDifficulties.forEach((difficulty) => {
     const button = document.createElement("button");
@@ -134,8 +154,13 @@ export function createMainMenu(actions: MainMenuActions): {
 
   return {
     element: menu,
-    setSavedRunAvailable(available) {
+    setSavedRunAvailable(available, continueLabel = "Continue") {
       continueButton.hidden = !available;
+       continueButton.textContent = continueLabel;
+      loadButton.disabled = !available;
+      note.textContent = available
+        ? "Continue picks the active slot. Load Game lets you browse all five."
+        : "Runs live in five local save slots.";
     },
     showRootView() {
       showRootView();

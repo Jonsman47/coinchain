@@ -1,3 +1,4 @@
+import { getCampaignDailyGoals } from "./campaignDailyGoals";
 import type { DayGoal } from "./levels";
 
 export type CampaignDifficultyId =
@@ -119,64 +120,13 @@ export function getCampaignDifficulty(
   return campaignDifficultyDefinitions[difficultyId];
 }
 
-function getGoalMultiplier(
-  difficultyId: CampaignDifficultyId,
-  dayNumber: number
-): number {
-  const getCompoundingMultiplier = (
-    day1: number,
-    day2: number,
-    day3: number,
-    dailyGrowth: number
-  ) => {
-    if (dayNumber === 1) {
-      return day1;
-    }
-
-    if (dayNumber === 2) {
-      return day2;
-    }
-
-    if (dayNumber === 3) {
-      return day3;
-    }
-
-    return day3 * dailyGrowth ** (dayNumber - 3);
-  };
-
-  switch (difficultyId) {
-    case "easy":
-      return getCompoundingMultiplier(2.3, 6.5, 16, 1.13);
-    case "normal":
-      return getCompoundingMultiplier(3, 8.2, 20.5, 1.14);
-    case "medium":
-      return getCompoundingMultiplier(4, 11, 27.5, 1.15);
-    case "hard":
-      return getCompoundingMultiplier(4.8, 14, 33.5, 1.16);
-    case "insane":
-      return getCompoundingMultiplier(5, 15.2, 34, 1.17);
-    case "extreme":
-      return getCompoundingMultiplier(4.4, 10.2, 18.1, 1.19);
-    case "hardcore":
-      return getCompoundingMultiplier(4.7, 10.7, 18.7, 1.21);
-  }
-}
-
 export function scaleGoalsForDifficulty(
   goals: DayGoal[],
   difficultyId: CampaignDifficultyId,
   dayNumber: number
 ): DayGoal[] {
-  const multiplier = getGoalMultiplier(difficultyId, dayNumber);
-
-  if (multiplier === 1) {
-    return goals.map((goal) => ({ ...goal }));
-  }
-
-  return goals.map((goal) => ({
-    ...goal,
-    target: Math.max(1, Math.ceil(goal.target * multiplier))
-  }));
+  void goals;
+  return getCampaignDailyGoals(difficultyId, dayNumber);
 }
 
 export function applyDifficultyPriceMultiplier(

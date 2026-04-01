@@ -4,6 +4,7 @@ import { createHud } from "../components/Hud";
 import { createMainMenu } from "../components/MainMenu";
 import { createTileInfo } from "../components/TileInfo";
 import { createTileTray } from "../components/TileTray";
+import { readSettings, type AppSettingsBridge } from "./settings";
 import type { AppSnapshot } from "./store";
 import { createAppStore } from "./store";
 
@@ -42,6 +43,11 @@ function writeSavedSnapshot(snapshot: AppSnapshot) {
 
 export function createGameShell(): HTMLElement {
   const store = createAppStore();
+  const staticSettings = readSettings();
+  const settingsBridge: AppSettingsBridge = {
+    get: () => staticSettings,
+    subscribe: () => () => undefined
+  };
   const shell = document.createElement("main");
   shell.className = "app-shell";
   let autosaveArmed = false;
@@ -102,9 +108,9 @@ export function createGameShell(): HTMLElement {
   };
 
   const hud = createHud(store, handleBackToMenu);
-  const board = createBoard(store);
-  const tileTray = createTileTray(store);
-  const tileInfo = createTileInfo(store);
+  const board = createBoard(store, settingsBridge);
+  const tileTray = createTileTray(store, settingsBridge);
+  const tileInfo = createTileInfo(store, settingsBridge);
   const controls = createControlsPanel(store);
 
   const runLayout = document.createElement("div");
@@ -115,7 +121,7 @@ export function createGameShell(): HTMLElement {
 
   const boardColumn = document.createElement("div");
   boardColumn.className = "run-layout__board";
-  boardColumn.append(board, tileTray);
+  boardColumn.append(board.element, tileTray);
 
   const sideRail = document.createElement("aside");
   sideRail.className = "run-layout__side";
@@ -141,6 +147,26 @@ export function createGameShell(): HTMLElement {
 
       armAutosave();
       showRun();
+    },
+    onLoadGame: () => {
+      const savedSnapshot = readSavedSnapshot();
+
+      if (!savedSnapshot) {
+        menu.setSavedRunAvailable(false);
+        return;
+      }
+
+      if (!store.loadSnapshot(savedSnapshot)) {
+        clearSavedSnapshot();
+        menu.setSavedRunAvailable(false);
+        return;
+      }
+
+      armAutosave();
+      showRun();
+    },
+    onOpenSettings: () => {
+      // Settings wiring is handled outside this lightweight shell in the current build.
     },
     onStartCampaign: (difficulty) => {
       store.startMode("campaign", difficulty);

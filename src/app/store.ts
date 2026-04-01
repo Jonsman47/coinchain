@@ -143,6 +143,7 @@ export interface AppSnapshot {
 
 export interface AppStore {
   buyExpansion: (side: ExpansionSide) => void;
+  clearSelection: () => void;
   focusCell: (cellId: string) => void;
   getSnapshot: () => AppSnapshot;
   hoverTile: (tileId: TileId | null) => void;
@@ -150,11 +151,15 @@ export interface AppStore {
   nextLevel: () => void;
   placeSelectedTile: (cellId: string) => void;
   reset: () => void;
+  resetFocusedTileProperties: () => void;
   retryLevel: () => void;
+  sellFocusedTile: () => void;
   sellTile: (cellId: string) => void;
   selectTile: (tileId: TileId) => void;
   setFocusedTileDirection: (direction: OutputDirection) => void;
   setFocusedTileReleaseSeconds: (releaseSeconds: ReleaseSeconds) => void;
+  setShowPredictionPreference: (enabled: boolean) => void;
+  setSimulationClockState: (state: SimulationClockState) => void;
   skipDay: () => void;
   upgradeFocusedTile: () => void;
   setSpeed: (speed: SpeedMultiplier) => void;
@@ -167,7 +172,15 @@ export interface AppStore {
 const FEEDBACK_DURATION_MS = 1050;
 const LEVEL_ADVANCE_DELAY_MS = 900;
 const BASE_TICK_MS = 1000;
+const MAX_ACCUMULATED_TICK_MS = BASE_TICK_MS * 6;
+const TICK_PUMP_INTERVAL_MS = 120;
 const boardCellIds = new Set(allBoardCells.map((cell) => cell.id));
+
+export interface SimulationClockState {
+  active: boolean;
+  allowBackground: boolean;
+  visible: boolean;
+}
 
 function isCampaignRun(run: RunDefinition): run is LevelDefinition {
   return run.kind === "campaign";
@@ -208,7 +221,7 @@ function isOutputDirection(value: unknown): value is OutputDirection {
 }
 
 function isReleaseSeconds(value: unknown): value is ReleaseSeconds {
-  return value === 10 || value === 20 || value === 40 || value === 80;
+  return value === 2 || value === 5 || value === 10 || value === 20 || value === 40 || value === 80;
 }
 
 function toNonNegativeInt(value: unknown, fallback = 0): number {
@@ -284,7 +297,7 @@ function getGoalPaceLabel(
     return `Best +${formatCompactNumber(snapshot.bestCycleIncome)} / Upkeep -${formatCompactNumber(snapshot.pressureCost)}`;
   }
 
-  if (!getCampaignDifficultyState(snapshot).showPrediction) {
+  if (!snapshot.showGoalPrediction) {
     return "";
   }
 
@@ -755,6 +768,9 @@ function withDerivedLevelState(snapshot: AppSnapshot): AppSnapshot {
       ? projectedCycle.earnedCoins - pressureCost
       : projectedCycle.earnedCoins;
   const projectedIncome = projectedNetPerCycle;
+  const showGoalPrediction = Boolean(
+    difficultyState?.showPrediction && snapshot.showGoalPrediction
+  );
   const isCampaignDayOver =
     snapshot.mode === "campaign" &&
     isCampaignRun(snapshot.currentLevel) &&
@@ -814,7 +830,7 @@ function withDerivedLevelState(snapshot: AppSnapshot): AppSnapshot {
     endlessScore,
     goalLabel: getGoalLabel({ ...snapshot, completedCycles, endlessScore }),
     goalPaceLabel: getGoalPaceLabel(
-      { ...snapshot, completedCycles, endlessScore, pressureCost },
+      { ...snapshot, completedCycles, endlessScore, pressureCost, showGoalPrediction },
       completedCycles,
       projectedIncome
     ),
@@ -833,7 +849,7 @@ function withDerivedLevelState(snapshot: AppSnapshot): AppSnapshot {
     pressureCost,
     projectedIncome,
     selectedTileId,
-    showGoalPrediction: difficultyState?.showPrediction ?? false,
+    showGoalPrediction,
     skipDayAvailable: canSkipDay(snapshot),
     tilePrices
   };
@@ -1171,7 +1187,14 @@ export function createAppStore(): AppStore {
   let feedbackTimeout: ReturnType<typeof setTimeout> | null = null;
   let levelAdvanceTimeout: ReturnType<typeof setTimeout> | null = null;
   let tickTimeout: ReturnType<typeof setTimeout> | null = null;
-  let timingActive = false;
+  let showPredictionPreference = snapshot.showGoalPrediction;
+  let simulationClockState: SimulationClockState = {
+    active: false,
+    allowBackground: true,
+    visible: true
+  };
+  let lastTickTimestamp = performance.now();
+  let accumulatedTickMs = 0;
 
   const clearFeedbackTimer = () => {
     if (!feedbackTimeout) {
@@ -1200,22 +1223,69 @@ export function createAppStore(): AppStore {
     tickTimeout = null;
   };
 
+  const resetTickAccumulation = () => {
+    lastTickTimestamp = performance.now();
+    accumulatedTickMs = 0;
+  };
+
+  const canRunSimulation = () => {
+    return (
+      simulationClockState.active &&
+      (simulationClockState.visible || simulationClockState.allowBackground) &&
+      snapshot.levelRunState === "playing" &&
+      snapshot.speedMultiplier !== 0
+    );
+  };
+
   const scheduleTick = () => {
     clearTickTimer();
 
-    if (!timingActive || snapshot.levelRunState !== "playing" || snapshot.speedMultiplier === 0) {
+    if (!canRunSimulation()) {
       return;
     }
 
     tickTimeout = setTimeout(() => {
       tickTimeout = null;
-      runCycleNow();
-    }, BASE_TICK_MS / snapshot.speedMultiplier);
+      const now = performance.now();
+      const elapsedMs = Math.max(0, now - lastTickTimestamp);
+      lastTickTimestamp = now;
+
+      if (!canRunSimulation()) {
+        accumulatedTickMs = 0;
+        return;
+      }
+
+      accumulatedTickMs = Math.min(
+        MAX_ACCUMULATED_TICK_MS,
+        accumulatedTickMs + elapsedMs * snapshot.speedMultiplier
+      );
+
+      let cyclesRun = 0;
+
+      while (accumulatedTickMs >= BASE_TICK_MS && cyclesRun < 6 && canRunSimulation()) {
+        accumulatedTickMs -= BASE_TICK_MS;
+        cyclesRun += 1;
+        runCycleNow();
+      }
+
+      if (cyclesRun >= 6) {
+        accumulatedTickMs = Math.min(accumulatedTickMs, BASE_TICK_MS);
+      }
+
+      scheduleTick();
+    }, TICK_PUMP_INTERVAL_MS);
   };
 
   const emit = () => {
     scheduleTick();
     listeners.forEach((listener) => listener(snapshot));
+  };
+
+  const applyShowPredictionPreference = (nextSnapshot: AppSnapshot): AppSnapshot => {
+    return withDerivedLevelState({
+      ...nextSnapshot,
+      showGoalPrediction: showPredictionPreference
+    });
   };
 
   const loadCampaignLevel = (
@@ -1228,7 +1298,7 @@ export function createAppStore(): AppStore {
 
     clearFeedbackTimer();
     clearLevelAdvanceTimer();
-    snapshot = buildCampaignSnapshot(levelIndex, difficultyId);
+    snapshot = applyShowPredictionPreference(buildCampaignSnapshot(levelIndex, difficultyId));
 
     if (preserveSpeed) {
       snapshot = withDerivedLevelState({
@@ -1238,6 +1308,7 @@ export function createAppStore(): AppStore {
       });
     }
 
+    resetTickAccumulation();
     emit();
   };
 
@@ -1245,6 +1316,7 @@ export function createAppStore(): AppStore {
     clearFeedbackTimer();
     clearLevelAdvanceTimer();
     snapshot = buildEndlessSnapshot();
+    resetTickAccumulation();
     emit();
   };
 
@@ -1266,7 +1338,8 @@ export function createAppStore(): AppStore {
 
     levelAdvanceTimeout = setTimeout(() => {
       levelAdvanceTimeout = null;
-      snapshot = buildNextCampaignDaySnapshot(snapshot);
+      snapshot = applyShowPredictionPreference(buildNextCampaignDaySnapshot(snapshot));
+      resetTickAccumulation();
       emit();
     }, LEVEL_ADVANCE_DELAY_MS);
   };
@@ -1391,6 +1464,20 @@ export function createAppStore(): AppStore {
       });
       emit();
     },
+    clearSelection() {
+      if (!snapshot.selectedTileId && !snapshot.inspectedCellId && !snapshot.hoveredTileId) {
+        return;
+      }
+
+      snapshot = {
+        ...snapshot,
+        hoveredTileId: null,
+        inspectedCellId: null,
+        selectedTileId: null,
+        statusMessage: "Selection cleared."
+      };
+      emit();
+    },
     focusCell(cellId) {
       if (!isCellWithinBounds(cellId, snapshot.boardBounds)) {
         return;
@@ -1435,7 +1522,8 @@ export function createAppStore(): AppStore {
 
       clearFeedbackTimer();
       clearLevelAdvanceTimer();
-      snapshot = restoredSnapshot;
+      snapshot = applyShowPredictionPreference(restoredSnapshot);
+      resetTickAccumulation();
       emit();
       scheduleLevelAdvance();
       return true;
@@ -1570,8 +1658,41 @@ export function createAppStore(): AppStore {
     reset() {
       retryCurrentRun();
     },
+    resetFocusedTileProperties() {
+      const cellId = snapshot.inspectedCellId;
+
+      if (!cellId) {
+        return;
+      }
+
+      const tileId = snapshot.placedTiles[cellId];
+
+      if (!tileId) {
+        return;
+      }
+
+      const currentTier = snapshot.tileTiersByCell[cellId] ?? DEFAULT_TILE_TIER;
+      snapshot = withDerivedLevelState({
+        ...snapshot,
+        tilePropertiesByCell: {
+          ...snapshot.tilePropertiesByCell,
+          [cellId]: getDefaultTileProperties(tileId, currentTier)
+        },
+        statusMessage: `${getTileDefinition(tileId).name} reset to default settings.`
+      });
+      emit();
+    },
     retryLevel() {
       retryCurrentRun();
+    },
+    sellFocusedTile() {
+      const targetCellId = snapshot.inspectedCellId ?? snapshot.focusedCellId;
+
+      if (!targetCellId) {
+        return;
+      }
+
+      store.sellTile(targetCellId);
     },
     sellTile(cellId) {
       if (snapshot.levelRunState !== "playing") {
@@ -1712,6 +1833,26 @@ export function createAppStore(): AppStore {
       });
       emit();
     },
+    setShowPredictionPreference(enabled) {
+      showPredictionPreference = enabled;
+      snapshot = applyShowPredictionPreference(snapshot);
+      emit();
+    },
+    setSimulationClockState(nextState) {
+      const changed =
+        simulationClockState.active !== nextState.active ||
+        simulationClockState.allowBackground !== nextState.allowBackground ||
+        simulationClockState.visible !== nextState.visible;
+
+      simulationClockState = nextState;
+
+      if (!changed) {
+        return;
+      }
+
+      resetTickAccumulation();
+      scheduleTick();
+    },
     upgradeFocusedTile() {
       if (snapshot.levelRunState !== "playing" || !snapshot.inspectedCellId) {
         return;
@@ -1795,11 +1936,14 @@ export function createAppStore(): AppStore {
         speedMultiplier: speed,
         statusMessage: speed === 0 ? "Game paused." : `Speed set to ${speed}x.`
       });
+      resetTickAccumulation();
       emit();
     },
     setTimeActive(active) {
-      timingActive = active;
-      emit();
+      store.setSimulationClockState({
+        ...simulationClockState,
+        active
+      });
     },
     startMode(mode, difficultyId = "easy") {
       if (mode === "endless") {
@@ -1811,6 +1955,7 @@ export function createAppStore(): AppStore {
     },
     subscribe(listener) {
       listeners.add(listener);
+      scheduleTick();
       listener(snapshot);
 
       return () => {

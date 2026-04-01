@@ -1,3 +1,4 @@
+import type { AppSettingsBridge } from "../app/settings";
 import type { AppStore } from "../app/store";
 import { formatCompactNumber } from "../game/formatting";
 import { getTileUnlockDay, levels } from "../game/levels";
@@ -22,7 +23,10 @@ const sortedTileCatalog = [...tileCatalog].sort((leftTile, rightTile) => {
   return tileCatalog.findIndex((tile) => tile.id === leftTile.id) - tileCatalog.findIndex((tile) => tile.id === rightTile.id);
 });
 
-export function createTileTray(store: AppStore): HTMLElement {
+export function createTileTray(
+  store: AppStore,
+  settingsBridge: AppSettingsBridge
+): HTMLElement {
   const section = document.createElement("section");
   section.className = "shop-strip";
 
@@ -37,6 +41,7 @@ export function createTileTray(store: AppStore): HTMLElement {
   const tileCosts = new Map<TileId, HTMLSpanElement>();
   const tileOverlays = new Map<TileId, HTMLDivElement>();
   const tileOverlayLabels = new Map<TileId, HTMLSpanElement>();
+  let runtimeSettings = settingsBridge.get();
 
   sortedTileCatalog.forEach((tile) => {
     const button = document.createElement("button");
@@ -47,13 +52,17 @@ export function createTileTray(store: AppStore): HTMLElement {
       store.selectTile(tile.id);
     });
     button.addEventListener("mouseenter", () => {
-      store.hoverTile(tile.id);
+      if (runtimeSettings.showTileDescriptionsOnHover) {
+        store.hoverTile(tile.id);
+      }
     });
     button.addEventListener("mouseleave", () => {
       store.hoverTile(null);
     });
     button.addEventListener("focus", () => {
-      store.hoverTile(tile.id);
+      if (runtimeSettings.showTileDescriptionsOnHover) {
+        store.hoverTile(tile.id);
+      }
     });
     button.addEventListener("blur", () => {
       store.hoverTile(null);
@@ -82,6 +91,10 @@ export function createTileTray(store: AppStore): HTMLElement {
 
   section.append(label, list);
 
+  settingsBridge.subscribe((nextSettings) => {
+    runtimeSettings = nextSettings;
+  });
+
   store.subscribe(
     ({ coins, currentLevel, levelRunState, mode, placedTiles, selectedTileId, tilePrices }) => {
       const availableTileIds = new Set(currentLevel.availableTileIds);
@@ -107,6 +120,11 @@ export function createTileTray(store: AppStore): HTMLElement {
         button.classList.toggle("is-selected", isSelected);
         button.classList.toggle("is-unaffordable", isAvailable && (!affordable || !isPlaying));
         button.classList.toggle("is-darkened", isDarkened);
+        button.title = runtimeSettings.showTooltips
+          ? !isAvailable
+            ? `${tile.name} unlocks on Day ${getTileUnlockDay(tileId)}.`
+            : `${tile.name} / ${tile.description} / Cost ${price}`
+          : "";
         button.dataset.state = !isAvailable
           ? "locked"
           : !isPlaying

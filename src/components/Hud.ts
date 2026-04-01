@@ -50,7 +50,7 @@ function createBackIcon(): SVGSVGElement {
   return svg;
 }
 
-export function createHud(store: AppStore, onBackToMenu: () => void): HTMLElement {
+export function createHud(store: AppStore, onOpenPauseMenu: () => void): HTMLElement {
   const header = document.createElement("header");
   header.className = "game-topbar";
 
@@ -86,10 +86,11 @@ export function createHud(store: AppStore, onBackToMenu: () => void): HTMLElemen
   const backButton = document.createElement("button");
   backButton.type = "button";
   backButton.className = "back-button";
-  backButton.setAttribute("aria-label", "Back to main menu");
+  backButton.dataset.action = "open-pause-menu";
+  backButton.setAttribute("aria-label", "Open pause menu");
   backButton.append(createBackIcon());
   backButton.addEventListener("click", () => {
-    onBackToMenu();
+    onOpenPauseMenu();
   });
 
   const pauseButton = document.createElement("button");

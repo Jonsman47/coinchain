@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from "electron";
+import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import path from "node:path";
 
 const WINDOW_WIDTH = 1440;
@@ -15,6 +15,7 @@ function createMainWindow(): BrowserWindow {
     title: "Coin Chain",
     autoHideMenuBar: true,
     webPreferences: {
+      backgroundThrottling: false,
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false
@@ -45,11 +46,27 @@ function createMainWindow(): BrowserWindow {
     mainWindow.show();
   });
 
+  mainWindow.on("enter-full-screen", () => {
+    mainWindow.webContents.send("coin-chain:fullscreen-changed", true);
+  });
+  mainWindow.on("leave-full-screen", () => {
+    mainWindow.webContents.send("coin-chain:fullscreen-changed", false);
+  });
+
   return mainWindow;
 }
 
 app.whenReady().then(() => {
-  createMainWindow();
+  const mainWindow = createMainWindow();
+
+  ipcMain.handle("coin-chain:get-fullscreen", () => {
+    return mainWindow.isFullScreen();
+  });
+
+  ipcMain.handle("coin-chain:set-fullscreen", (_event, isFullscreen: boolean) => {
+    mainWindow.setFullScreen(Boolean(isFullscreen));
+    return mainWindow.isFullScreen();
+  });
 });
 
 app.on("window-all-closed", () => {

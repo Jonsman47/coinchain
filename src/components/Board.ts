@@ -1,4 +1,5 @@
-import type { AppStore } from "../app/store";
+import type { AppSettingsBridge } from "../app/settings";
+import type { AppSnapshot, AppStore } from "../app/store";
 import {
   BASE_BOARD_COLUMNS,
   BASE_BOARD_ROWS,
@@ -69,7 +70,18 @@ function getBoundsKey(bounds: BoardBounds): string {
   return `${bounds.minRow}:${bounds.maxRow}:${bounds.minColumn}:${bounds.maxColumn}`;
 }
 
-export function createBoard(store: AppStore): HTMLElement {
+export interface BoardController {
+  centerView: () => void;
+  element: HTMLElement;
+  panBy: (deltaX: number, deltaY: number) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+}
+
+export function createBoard(
+  store: AppStore,
+  settingsBridge: AppSettingsBridge
+): BoardController {
   const stage = document.createElement("section");
   stage.className = "board-stage";
 
@@ -146,6 +158,8 @@ export function createBoard(store: AppStore): HTMLElement {
   let hasRenderedBoardState = false;
   let previousPlacedTiles: PlacedTiles = {};
   let previousTileTiers: TileTiersByCell = {};
+  let latestSnapshot: AppSnapshot = store.getSnapshot();
+  let runtimeSettings = settingsBridge.get();
 
   const triggerCellPulse = (
     button: HTMLButtonElement,
@@ -194,6 +208,47 @@ export function createBoard(store: AppStore): HTMLElement {
     panX = totalX - centeredX;
     panY = totalY - centeredY;
     camera.style.transform = `translate(${totalX}px, ${totalY}px) scale(${scale})`;
+  };
+
+  const applyZoom = (nextScale: number) => {
+    const clampedScale = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, nextScale));
+
+    if (clampedScale === scale) {
+      return;
+    }
+
+    const viewportWidth = viewport.clientWidth || 1;
+    const viewportHeight = viewport.clientHeight || 1;
+    const shellWidth = shell.offsetWidth || 1;
+    const shellHeight = shell.offsetHeight || 1;
+    const centeredX = (viewportWidth - shellWidth * scale) / 2;
+    const centeredY = (viewportHeight - shellHeight * scale) / 2;
+    const totalX = centeredX + panX;
+    const totalY = centeredY + panY;
+    const pointerX = viewportWidth / 2;
+    const pointerY = viewportHeight / 2;
+    const boardX = (pointerX - totalX) / scale;
+    const boardY = (pointerY - totalY) / scale;
+    const nextCenteredX = (viewportWidth - shellWidth * clampedScale) / 2;
+    const nextCenteredY = (viewportHeight - shellHeight * clampedScale) / 2;
+
+    scale = clampedScale;
+    panX = pointerX - nextCenteredX - boardX * clampedScale;
+    panY = pointerY - nextCenteredY - boardY * clampedScale;
+    applyCameraTransform();
+  };
+
+  const centerView = () => {
+    scale = 1;
+    panX = 0;
+    panY = 0;
+    applyCameraTransform();
+  };
+
+  const panBy = (deltaX: number, deltaY: number) => {
+    panX += deltaX;
+    panY += deltaY;
+    applyCameraTransform();
   };
 
   const queueCameraTransform = () => {
@@ -322,8 +377,8 @@ export function createBoard(store: AppStore): HTMLElement {
       return;
     }
 
-    panX = panStartX + deltaX;
-    panY = panStartY + deltaY;
+    panX = panStartX + deltaX * runtimeSettings.panSensitivity;
+    panY = panStartY + deltaY * runtimeSettings.panSensitivity;
     applyCameraTransform();
   });
 
@@ -369,10 +424,12 @@ export function createBoard(store: AppStore): HTMLElement {
     (event) => {
       event.preventDefault();
 
+      const zoomStep = 1 + 0.12 * runtimeSettings.zoomSensitivity;
+
       const nextScale =
         event.deltaY < 0
-          ? Math.min(MAX_ZOOM, scale * 1.12)
-          : Math.max(MIN_ZOOM, scale / 1.12);
+          ? Math.min(MAX_ZOOM, scale * zoomStep)
+          : Math.max(MIN_ZOOM, scale / zoomStep);
 
       if (nextScale === scale) {
         return;
@@ -413,6 +470,37 @@ export function createBoard(store: AppStore): HTMLElement {
     ["left", leftExpandButton]
   ]);
 
+  const updateBoardRuntimePresentation = () => {
+    stage.dataset.floatingText = runtimeSettings.showFloatingGainText ? "on" : "off";
+    stage.dataset.motion = runtimeSettings.reducedMotion ? "reduced" : "full";
+    viewport.title = runtimeSettings.showTooltips
+      ? "Drag to pan. Use the mouse wheel or hotkeys to zoom."
+      : "";
+  };
+
+  updateBoardRuntimePresentation();
+
+  settingsBridge.subscribe((nextSettings) => {
+    runtimeSettings = nextSettings;
+    updateBoardRuntimePresentation();
+
+    getBoardLayout(latestSnapshot.boardBounds).forEach((cell) => {
+      const button = cellButtons.get(cell.id);
+
+      if (!button) {
+        return;
+      }
+
+      const placedTileId = latestSnapshot.placedTiles[cell.id];
+
+      button.title = runtimeSettings.showTooltips
+        ? placedTileId
+          ? `${getBoardCellLabel(cell.id, latestSnapshot.boardBounds)} / ${placedTileId.replace("_", " ")}`
+          : getBoardCellLabel(cell.id, latestSnapshot.boardBounds)
+        : "";
+    });
+  });
+
   store.subscribe(
     ({
       activeCycleFeedback,
@@ -433,6 +521,7 @@ export function createBoard(store: AppStore): HTMLElement {
       tileTiersByCell,
       tilePropertiesByCell
     }) => {
+      latestSnapshot = store.getSnapshot();
       stage.dataset.state = levelRunState;
 
       if (getBoundsKey(boardBounds) !== renderedBoundsKey) {
@@ -522,6 +611,11 @@ export function createBoard(store: AppStore): HTMLElement {
         const isBlocked = blockedCellIds.has(cell.id);
 
         button.disabled = false;
+        button.title = runtimeSettings.showTooltips
+          ? placedTileId
+            ? `${getBoardCellLabel(cell.id, boardBounds)} / ${placedTileId.replace("_", " ")}`
+            : getBoardCellLabel(cell.id, boardBounds)
+          : "";
         button.classList.toggle("is-blocked", isBlocked);
         button.classList.toggle("is-focused", cell.id === focusedCellId);
         button.classList.toggle(
@@ -588,7 +682,7 @@ export function createBoard(store: AppStore): HTMLElement {
 
         const activeOutput = outputDetailsByCell.get(cell.id);
 
-        if (activeOutput) {
+        if (activeOutput && runtimeSettings.showFloatingGainText) {
           const yieldLabel = document.createElement("span");
           yieldLabel.className = "board-cell__yield";
           yieldLabel.textContent = activeOutput.label;
@@ -615,5 +709,15 @@ export function createBoard(store: AppStore): HTMLElement {
     }
   );
 
-  return stage;
+  return {
+    centerView,
+    element: stage,
+    panBy,
+    zoomIn() {
+      applyZoom(scale * (1 + 0.12 * runtimeSettings.zoomSensitivity));
+    },
+    zoomOut() {
+      applyZoom(scale / (1 + 0.12 * runtimeSettings.zoomSensitivity));
+    }
+  };
 }
