@@ -756,7 +756,8 @@ button {
   grid-template-columns: repeat(var(--board-columns), var(--board-cell-size));
   grid-template-rows: repeat(var(--board-rows), var(--board-cell-size));
   gap: 0;
-  overflow: hidden;
+  overflow: visible;
+  isolation: isolate;
   border-radius: 12px;
   background:
     radial-gradient(circle at 50% 0%, rgba(190, 222, 255, 0.18), transparent 44%),
@@ -792,7 +793,9 @@ button {
   align-items: center;
   justify-content: center;
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
+  isolation: isolate;
+  z-index: 0;
   cursor: pointer;
   box-shadow:
     inset 0 0 0 1px rgba(48, 71, 99, 0.34),
@@ -806,6 +809,7 @@ button {
 }
 
 .board-cell:hover {
+  z-index: 1;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 30%),
     linear-gradient(180deg, var(--bg-board-cell-hover) 0%, #28486b 100%);
@@ -841,6 +845,7 @@ button {
 }
 
 .board-cell.is-focused {
+  z-index: 2;
   box-shadow:
     inset 0 0 0 1px rgba(48, 71, 99, 0.34),
     inset 0 0 0 2px rgba(255, 255, 255, 0.92),
@@ -869,6 +874,7 @@ button {
   height: 100%;
   display: grid;
   place-items: center;
+  overflow: visible;
 }
 
 .board-cell__well,
@@ -948,7 +954,8 @@ button {
 }
 
 .board-piece__counter,
-.board-piece__direction {
+.board-piece__direction,
+.board-piece__tier {
   position: absolute;
   z-index: 2;
   padding: 0 6px;
@@ -957,6 +964,7 @@ button {
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 45%),
     rgba(12, 12, 14, 0.84);
   color: #fffdf8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   font-weight: 700;
   box-shadow:
     0 10px 16px rgba(0, 0, 0, 0.16),
@@ -986,10 +994,103 @@ button {
   justify-content: center;
 }
 
+.board-piece__tier {
+  right: 4px;
+  top: 4px;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.22);
+}
+
+.board-piece__tier[data-tier="1"] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 45%),
+    linear-gradient(180deg, #536b85 0%, #2a3a4d 100%);
+}
+
+.board-piece__tier[data-tier="2"] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 45%),
+    linear-gradient(180deg, #5a7d9d 0%, #2a4d69 100%);
+}
+
+.board-piece__tier[data-tier="3"] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 45%),
+    linear-gradient(180deg, #4c948c 0%, #1e5c5b 100%);
+}
+
+.board-piece__tier[data-tier="4"] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 45%),
+    linear-gradient(180deg, #6db186 0%, #275744 100%);
+}
+
+.board-piece__tier[data-tier="5"] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 45%),
+    linear-gradient(180deg, #c7bc79 0%, #6f5b25 100%);
+  color: #fff7dc;
+}
+
+.board-piece__tier[data-tier="6"] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 45%),
+    linear-gradient(180deg, #d6a861 0%, #8a531e 100%);
+  color: #fff5da;
+}
+
+.board-piece__tier[data-tier="7"] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 45%),
+    linear-gradient(180deg, #e2b45d 0%, #9f5f1f 100%);
+  color: #fff3d2;
+}
+
+.board-piece__tier[data-tier="8"] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 45%),
+    linear-gradient(180deg, #efc76d 0%, #ad6d1e 100%);
+  color: #fff6de;
+}
+
+.board-piece__tier[data-tier="9"] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 45%),
+    linear-gradient(180deg, #ffd88a 0%, #c2772d 100%);
+  color: #fff8e3;
+  box-shadow:
+    0 10px 16px rgba(0, 0, 0, 0.18),
+    0 0 12px rgba(255, 212, 109, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.board-piece__tier[data-tier="10"] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 45%),
+    linear-gradient(180deg, #fff0b6 0%, #d4892c 100%);
+  color: #432306;
+  border-color: rgba(255, 242, 189, 0.46);
+  box-shadow:
+    0 12px 18px rgba(0, 0, 0, 0.18),
+    0 0 18px rgba(255, 214, 103, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
 .board-cell__yield {
   position: absolute;
-  top: -8px;
-  right: -6px;
+  top: -12px;
+  left: 50%;
   min-width: 40px;
   padding: 5px 9px;
   border-radius: 999px;
@@ -1001,6 +1102,9 @@ button {
   font-weight: 800;
   letter-spacing: 0.02em;
   text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 4;
   animation: float-fade 1.08s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   box-shadow:
     0 18px 26px rgba(0, 0, 0, 0.2),
@@ -1498,8 +1602,36 @@ button {
 
 .tile-info__detail {
   margin: 0;
+  display: grid;
+  gap: 3px;
   font-size: 0.82rem;
   color: var(--text-soft);
+}
+
+.tile-info__detail-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.tile-info__detail-value {
+  color: var(--text-main);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.tile-info__detail[data-emphasis="current"] .tile-info__detail-value {
+  color: #45351d;
+}
+
+.tile-info__detail[data-emphasis="next"] .tile-info__detail-value {
+  color: #7a5718;
+}
+
+.tile-info__detail[data-emphasis="tier"] .tile-info__detail-value {
+  font-size: 0.9rem;
+  color: #231a10;
 }
 
 .tile-info__properties-label {
@@ -1675,8 +1807,15 @@ button {
   animation: tile-pulse 0.8s ease-out;
 }
 
+.board-cell.is-cycle-active,
+.board-cell.is-support-active {
+  z-index: 3;
+}
+
 .board-cell.is-cycle-active .board-piece__direction,
-.board-cell.is-support-active .board-piece__direction {
+.board-cell.is-support-active .board-piece__direction,
+.board-cell.is-cycle-active .board-piece__tier,
+.board-cell.is-support-active .board-piece__tier {
   box-shadow:
     0 0 0 1px rgba(255, 223, 138, 0.16) inset,
     0 0 14px rgba(255, 209, 92, 0.24);
@@ -1734,22 +1873,22 @@ button {
 @keyframes float-fade {
   0% {
     opacity: 0;
-    transform: translateY(12px) scale(0.86);
+    transform: translateX(-50%) translateY(12px) scale(0.86);
   }
 
   18% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateX(-50%) translateY(0) scale(1);
   }
 
   72% {
     opacity: 1;
-    transform: translateY(-5px) scale(1);
+    transform: translateX(-50%) translateY(-5px) scale(1);
   }
 
   100% {
     opacity: 0;
-    transform: translateY(-16px) scale(0.96);
+    transform: translateX(-50%) translateY(-16px) scale(0.96);
   }
 }
 

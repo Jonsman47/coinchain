@@ -492,10 +492,11 @@ export function createBoard(
       }
 
       const placedTileId = latestSnapshot.placedTiles[cell.id];
+      const currentTier = latestSnapshot.tileTiersByCell[cell.id] ?? 1;
 
       button.title = runtimeSettings.showTooltips
         ? placedTileId
-          ? `${getBoardCellLabel(cell.id, latestSnapshot.boardBounds)} / ${placedTileId.replace("_", " ")}`
+          ? `${getBoardCellLabel(cell.id, latestSnapshot.boardBounds)} / ${placedTileId.replace("_", " ")} / T${currentTier}`
           : getBoardCellLabel(cell.id, latestSnapshot.boardBounds)
         : "";
     });
@@ -609,11 +610,12 @@ export function createBoard(
 
         const placedTileId = placedTiles[cell.id];
         const isBlocked = blockedCellIds.has(cell.id);
+        const currentTier = tileTiersByCell[cell.id] ?? 1;
 
         button.disabled = false;
         button.title = runtimeSettings.showTooltips
           ? placedTileId
-            ? `${getBoardCellLabel(cell.id, boardBounds)} / ${placedTileId.replace("_", " ")}`
+            ? `${getBoardCellLabel(cell.id, boardBounds)} / ${placedTileId.replace("_", " ")} / T${currentTier}`
             : getBoardCellLabel(cell.id, boardBounds)
           : "";
         button.classList.toggle("is-blocked", isBlocked);
@@ -657,6 +659,12 @@ export function createBoard(
 
         tileWrap.append(visual);
 
+        const tierBadge = document.createElement("span");
+        tierBadge.className = "board-piece__tier";
+        tierBadge.dataset.tier = String(currentTier);
+        tierBadge.textContent = `T${currentTier}`;
+        tileWrap.append(tierBadge);
+
         if (supportsDirectionalOutput(placedTileId)) {
           const directionBadge = document.createElement("span");
           directionBadge.className = "board-piece__direction";
@@ -694,7 +702,6 @@ export function createBoard(
         }
 
         const previousTier = previousTileTiers[cell.id] ?? 1;
-        const currentTier = tileTiersByCell[cell.id] ?? 1;
 
         if (hasRenderedBoardState && currentTier > previousTier) {
           triggerCellPulse(button, "is-tier-pop", 620);

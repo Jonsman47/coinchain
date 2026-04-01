@@ -87,6 +87,30 @@ function getTierIndex(tier: number): number {
   return clampTier(tier) - 1;
 }
 
+function formatPercentBonus(percent: number): string {
+  return `+${Math.round(percent * 100)}%`;
+}
+
+function getBoosterTargetText(includeDiagonals: boolean, radius: number): string {
+  if (radius >= 2) {
+    return "Miners and Rich Miners within radius 2";
+  }
+
+  if (includeDiagonals) {
+    return "adjacent and diagonal Miners and Rich Miners";
+  }
+
+  return "adjacent Miners and Rich Miners";
+}
+
+function createBoosterEffectText(
+  bonusPercent: number,
+  includeDiagonals: boolean,
+  radius: number
+): string {
+  return `${formatPercentBonus(bonusPercent)} output to ${getBoosterTargetText(includeDiagonals, radius)}`;
+}
+
 const minerOutputs = [2, 3, 5, 8, 12, 18, 27, 40, 60, 90] as const;
 const richMinerOutputs = [5, 7, 10, 15, 22, 32, 46, 65, 92, 130] as const;
 const edgeOutputs = [8, 18, 40, 85, 180, 400, 900, 2100, 5000, 12000] as const;
@@ -109,61 +133,61 @@ const chainTierConfigs = [
 const boosterTierConfigs = [
   {
     bonusPercent: 0.15,
-    effectText: "+15% to adjacent Miner/Rich Miner output",
+    effectText: createBoosterEffectText(0.15, false, 1),
     includeDiagonals: false,
     radius: 1
   },
   {
     bonusPercent: 0.25,
-    effectText: "+25% to adjacent Miner/Rich Miner output",
+    effectText: createBoosterEffectText(0.25, false, 1),
     includeDiagonals: false,
     radius: 1
   },
   {
     bonusPercent: 0.4,
-    effectText: "+40% to adjacent Miner/Rich Miner output",
+    effectText: createBoosterEffectText(0.4, false, 1),
     includeDiagonals: false,
     radius: 1
   },
   {
     bonusPercent: 0.6,
-    effectText: "+60% to adjacent Miner/Rich Miner output",
+    effectText: createBoosterEffectText(0.6, false, 1),
     includeDiagonals: false,
     radius: 1
   },
   {
     bonusPercent: 0.85,
-    effectText: "+85% to adjacent Miner/Rich Miner output",
+    effectText: createBoosterEffectText(0.85, false, 1),
     includeDiagonals: false,
     radius: 1
   },
   {
     bonusPercent: 1.15,
-    effectText: "+115% to adjacent Miner/Rich Miner output",
+    effectText: createBoosterEffectText(1.15, false, 1),
     includeDiagonals: false,
     radius: 1
   },
   {
     bonusPercent: 1.5,
-    effectText: "+150% and diagonal neighbors too",
+    effectText: createBoosterEffectText(1.5, true, 1),
     includeDiagonals: true,
     radius: 1
   },
   {
     bonusPercent: 1.9,
-    effectText: "+190% within radius 2",
+    effectText: createBoosterEffectText(1.9, true, 2),
     includeDiagonals: true,
     radius: 2
   },
   {
     bonusPercent: 2.4,
-    effectText: "+240% within radius 2",
+    effectText: createBoosterEffectText(2.4, true, 2),
     includeDiagonals: true,
     radius: 2
   },
   {
     bonusPercent: 3,
-    effectText: "+300% within radius 2",
+    effectText: createBoosterEffectText(3, true, 2),
     includeDiagonals: true,
     radius: 2
   }

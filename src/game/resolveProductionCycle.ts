@@ -175,6 +175,15 @@ function floorOutput(value: number): number {
   return Math.max(0, Math.floor(value));
 }
 
+function getReadablePercentBoostedOutput(baseOutput: number, additiveBoost: number): number {
+  if (baseOutput <= 0 || additiveBoost <= 0) {
+    return baseOutput;
+  }
+
+  const roundedBoostedOutput = Math.ceil(baseOutput * (1 + additiveBoost));
+  return Math.max(baseOutput + 1, roundedBoostedOutput);
+}
+
 function getReleaseSeconds(
   cellId: string,
   tileId: "bank" | "vault",
@@ -318,12 +327,15 @@ export function resolveProductionCycle(
       const baseOutput = getTileOutput(tileId, tileTier);
       const supportState = mineSupportStates.get(cell.id);
       // Keep support stacking readable and stable:
-      // booster percentages add together, then only the single strongest
-      // focused support (Doubler/Tripler) applies to that mine.
-      const totalMultiplier =
-        (supportState ? 1 + supportState.additiveBoost : 1) *
-        (supportState?.focusedMultiplier ?? 1);
-      baseOutputs.set(cell.id, roundOutput(baseOutput * totalMultiplier));
+      // booster percentages add together and round up to a visible gain,
+      // then only the single strongest focused support (Doubler/Tripler)
+      // applies to that mine.
+      const percentBoostedOutput = getReadablePercentBoostedOutput(
+        baseOutput,
+        supportState?.additiveBoost ?? 0
+      );
+      const focusedMultiplier = supportState?.focusedMultiplier ?? 1;
+      baseOutputs.set(cell.id, roundOutput(percentBoostedOutput * focusedMultiplier));
       return;
     }
 

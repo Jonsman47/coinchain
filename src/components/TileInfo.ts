@@ -37,6 +37,26 @@ function getDirectionLabel(direction: OutputDirection): string {
   }
 }
 
+function setDetailLine(
+  line: HTMLParagraphElement,
+  labelText: string,
+  valueText: string,
+  emphasis: "current" | "next" | "tier"
+) {
+  line.replaceChildren();
+  line.dataset.emphasis = emphasis;
+
+  const label = document.createElement("span");
+  label.className = "tile-info__detail-label";
+  label.textContent = labelText;
+
+  const value = document.createElement("span");
+  value.className = "tile-info__detail-value";
+  value.textContent = valueText;
+
+  line.append(label, value);
+}
+
 export function createTileInfo(
   store: AppStore,
   settingsBridge: AppSettingsBridge
@@ -252,13 +272,13 @@ export function createTileInfo(
       }
 
       upgradeSection.hidden = false;
-      currentTierLine.textContent = `Tier ${tileTier}`;
-      currentEffectLine.textContent = `Now: ${currentEffectText}`;
-      currentEffectLine.hidden = !runtimeSettings.showAdvancedTileStats;
+      setDetailLine(currentTierLine, "Current tier", `Tier ${tileTier}`, "tier");
+      setDetailLine(currentEffectLine, "Current effect", currentEffectText, "current");
+      currentEffectLine.hidden = false;
 
       if (nextEffectText && nextUpgradeCost !== null) {
-        nextEffectLine.textContent = `Next: ${nextEffectText}`;
-        nextEffectLine.hidden = !runtimeSettings.showAdvancedTileStats;
+        setDetailLine(nextEffectLine, "Next tier", nextEffectText, "next");
+        nextEffectLine.hidden = false;
         upgradeButton.hidden = false;
 
         if (isInspectingFocusedTile) {
@@ -271,8 +291,8 @@ export function createTileInfo(
           upgradeButton.classList.add("is-disabled");
         }
       } else {
-        nextEffectLine.textContent = "Next: Max tier reached.";
-        nextEffectLine.hidden = !runtimeSettings.showAdvancedTileStats;
+        setDetailLine(nextEffectLine, "Next tier", "Max tier reached.", "next");
+        nextEffectLine.hidden = false;
         upgradeButton.textContent = "Max Tier";
         upgradeButton.disabled = true;
         upgradeButton.hidden = false;
@@ -292,7 +312,8 @@ export function createTileInfo(
       } else if (tileId === "anchor") {
         hint.textContent = "Routed value sent here becomes money right away.";
       } else if (tileId === "booster") {
-        hint.textContent = "Boosters add their % bonuses together on nearby mines.";
+        hint.textContent =
+          "Boosters add their % bonuses together on nearby mines, and any positive boost rounds up to a visible gain.";
       } else if (tileId === "doubler" || tileId === "tripler") {
         hint.textContent = "Only the single strongest Doubler or Tripler applies to each mine.";
       } else if (tileId === "edge") {
