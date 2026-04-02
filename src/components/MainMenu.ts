@@ -1,7 +1,5 @@
 import { campaignDifficulties, type CampaignDifficultyId } from "../game/campaignDifficulties";
 
-const brandImageSrc = new URL("./branding/coin-chain-logo.png", window.location.href).toString();
-
 export interface MainMenuActions {
   onContinue: () => void;
   onLoadGame: () => void;
@@ -22,11 +20,6 @@ export function createMainMenu(actions: MainMenuActions): {
   card.className = "main-menu__card";
   card.dataset.view = "root";
 
-  const brandImage = document.createElement("img");
-  brandImage.className = "main-menu__brand-image";
-  brandImage.src = brandImageSrc;
-  brandImage.alt = "Coin Chain";
-
   const eyebrow = document.createElement("span");
   eyebrow.className = "main-menu__eyebrow";
   eyebrow.textContent = "Coin Chain";
@@ -41,7 +34,6 @@ export function createMainMenu(actions: MainMenuActions): {
 
   const showRootView = () => {
     card.dataset.view = "root";
-    brandImage.hidden = false;
     eyebrow.textContent = "Coin Chain";
     title.textContent = "Small board. Tight choices.";
     subtitle.textContent =
@@ -50,7 +42,6 @@ export function createMainMenu(actions: MainMenuActions): {
 
   const showDifficultyView = () => {
     card.dataset.view = "difficulty";
-    brandImage.hidden = true;
     eyebrow.textContent = "Choose Difficulty";
     title.textContent = "Normal Mode";
     subtitle.textContent = "Pick how strict the economy gets before you start the run.";
@@ -158,7 +149,7 @@ export function createMainMenu(actions: MainMenuActions): {
 
   difficultyActions.append(backToModesButton);
   buttons.append(rootActions, difficultyActions);
-  card.append(brandImage, eyebrow, title, subtitle, buttons, note);
+  card.append(eyebrow, title, subtitle, buttons, note);
   menu.append(card);
 
   return {
