@@ -4,6 +4,12 @@ import path from "node:path";
 const WINDOW_WIDTH = 1440;
 const WINDOW_HEIGHT = 980;
 
+function getBrandingAssetPath(filename: string): string {
+  return app.isPackaged
+    ? path.join(__dirname, "../dist/branding", filename)
+    : path.join(app.getAppPath(), "public/branding", filename);
+}
+
 function createMainWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
     width: WINDOW_WIDTH,
@@ -14,6 +20,7 @@ function createMainWindow(): BrowserWindow {
     backgroundColor: "#f2c96e",
     title: "Coin Chain",
     autoHideMenuBar: true,
+    icon: getBrandingAssetPath("coin-chain-icon-256.png"),
     webPreferences: {
       backgroundThrottling: false,
       preload: path.join(__dirname, "preload.js"),

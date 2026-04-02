@@ -19,7 +19,8 @@
     "appId": "com.coinchain.desktop",
     "productName": "Coin Chain",
     "directories": {
-      "output": "release-build"
+      "output": "release-build",
+      "buildResources": "build"
     },
     "files": [
       "dist/**",
@@ -28,6 +29,7 @@
     ],
     "asar": true,
     "win": {
+      "icon": "branding/coin-chain-icon.ico",
       "signAndEditExecutable": false,
       "target": [
         "portable"
