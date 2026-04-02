@@ -289,42 +289,42 @@ const bankTierConfigs = [
     storageCap: 25000
   },
   {
-    allowInstantDirectRelease: true,
-    effectText: "Gains 6% every 10s, can release instantly if set to none output",
+    allowInstantDirectRelease: false,
+    effectText: "Gains 6% every 10s, faster release timer options",
     interestRate: 0.06,
     releaseOptions: [5, 10, 20, 40, 80],
     storageCap: 100000
   },
   {
-    allowInstantDirectRelease: true,
+    allowInstantDirectRelease: false,
     effectText: "Gains 8% every 10s",
     interestRate: 0.08,
     releaseOptions: [5, 10, 20, 40, 80],
     storageCap: 400000
   },
   {
-    allowInstantDirectRelease: true,
+    allowInstantDirectRelease: false,
     effectText: "Gains 12% every 10s, faster release intervals",
     interestRate: 0.12,
     releaseOptions: [2, 5, 10, 20, 40, 80],
     storageCap: 1500000
   },
   {
-    allowInstantDirectRelease: true,
+    allowInstantDirectRelease: false,
     effectText: "Gains 18% every 10s",
     interestRate: 0.18,
     releaseOptions: [2, 5, 10, 20, 40, 80],
     storageCap: 6000000
   },
   {
-    allowInstantDirectRelease: true,
+    allowInstantDirectRelease: false,
     effectText: "Gains 26% every 10s",
     interestRate: 0.26,
     releaseOptions: [2, 5, 10, 20, 40, 80],
     storageCap: 20000000
   },
   {
-    allowInstantDirectRelease: true,
+    allowInstantDirectRelease: false,
     effectText: "Gains 40% every 10s",
     interestRate: 0.4,
     releaseOptions: [2, 5, 10, 20, 40, 80],
